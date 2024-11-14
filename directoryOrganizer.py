@@ -26,7 +26,7 @@ code_type  = {"py","cpp","java","c","html","css","js","xml","php","json","jsonl"
 # 
 
 
-download_path = r'C:\Users\lukes\Downloads'
+source_path = r'C:\Users\lukes\Downloads'
 video_path = r'C:\Users\lukes\Desktop\Files\Video'
 audio_path = r'C:\Users\lukes\Desktop\Files\Audio'
 image_path = None
@@ -56,53 +56,71 @@ class downloadHandler(LoggingEventHandler):
 
         return verified    
 
-    def on_modified(self, event):
-        time.sleep(2)
-        # get name & type
-        file_name = event.src_path.split('\\')[-1]
-        file_type = event.src_path.split('.')[-1].lower()
-        path = None
 
-    # find correct file type
+    def move_file_by_type(self,src_path):
+        # get name & type of file
+        file_name = os.path.basename(src_path)
+        file_type = src_path.split('.')[-1].lower()
+        dst_path = None
+
+        # find correct file type
         if file_type in video_type:
-            path = video_path
+            dst_path = video_path
         elif file_type in audio_type:
-            path = audio_path
+            dst_path = audio_path
         elif file_type in image_type:
-            path = image_path       
+            dst_path = image_path       
         elif file_type in archive_type:
-            path = archive_path
+            dst_path = archive_path
         elif file_type in text_based_type:
-            path = text_based_path
+            dst_path = text_based_path
         elif file_type in executable_type:
-            path = executable_path
+            dst_path = executable_path
         elif file_type in code_type:
-            path = code_path       
+            dst_path = code_path       
 
-# verify path exists,
-# * can also use if os.path.exists(path)
+        # verify path exists,
+        # * can also use "if os.path.exists(dst_path): "
 
-        if path and self.verify_file(path) :
-            dst = os.path.join(path,file_name)
-            shutil.move(event.src_path, dst)        
+        if dst_path and self.verify_file(dst_path) :
+            dst = os.path.join(dst_path,file_name)
+            try:
+                shutil.move(src_path, dst)   
+            except Exception as e:
+                logging.error(f"Error occurred while moving file {file_name} : {e}")
+     
         
+    def on_modified(self, event):
+        self.move_file_by_type(event.src_path)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
+    
 
     event_handler = downloadHandler()
-    observer = Observer()
-    observer.schedule(event_handler, download_path, recursive=True)
+    # organize (once) all files in source directory
+    file_names = os.listdir(source_path)
+    
+
+    for name in file_names:
+        file_path = os.path.join(source_path,name)
+        if os.path.isfile(file_path):
+            event_handler.move_file_by_type(file_path)
+    
+    
+    observer = Observer(timeout=5)
+    observer.schedule(event_handler, source_path)
     observer.start()
     try:
         while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
+            time.sleep(5)
+    except (KeyboardInterrupt,SystemExit):
         observer.stop()
     observer.join()
+    sys.exit(0)
 
 
 
