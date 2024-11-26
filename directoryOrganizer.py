@@ -21,14 +21,17 @@ executable_type = {"exe","bat","msi"}
 code_type  = {"py","cpp","java","c","html","css","js","xml","php","json","jsonl","yaml"}
 
 
-# paths
-# 
-# 
+
+# ! Set up the paths to your directories
+# * make sure you to set the path in the following format : 
+# r'C:\path\to\directory'
+# * e.g. :
+# source_path = r'C:\Users\lior\Downloads'
 
 
-source_path = r'C:\Users\lukes\Downloads'
-video_path = r'C:\Users\lukes\Desktop\Files\Video'
-audio_path = r'C:\Users\lukes\Desktop\Files\Audio'
+source_path = None
+video_path = None
+audio_path = None
 image_path = None
 archive_path = None
 text_based_path = None
@@ -40,6 +43,7 @@ code_path = None
 
 class downloadHandler(LoggingEventHandler):
     
+    #verify that the entire file is at the source folder (and not being transported)
     def verify_file(self,src,time_limit = 30):
         verified = False
         time_waited = 0
